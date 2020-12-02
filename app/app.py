@@ -2,10 +2,8 @@ import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
@@ -60,7 +58,6 @@ def prepare_data(dataset_path):
 
     return X_train, X_val, X_test, y_train, y_val, y_test
 
-
 if __name__ == '__main__':
     # config_gpu()    
     
@@ -68,3 +65,9 @@ if __name__ == '__main__':
     dataset_path = 'app/dataset/dataset-simple.csv'
 
     X_train, X_val, X_test, y_train, y_val, y_test = prepare_data(dataset_path)
+
+    clf = MultinomialNB()
+    clf.fit(X_train, y_train)
+
+    y_pred = clf.predict(X_test)
+    plots.show_metrics(y_test, y_pred)
