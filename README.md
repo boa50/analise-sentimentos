@@ -1,0 +1,1 @@
+Trabalho sobre análise de sentimentos em dataset de tweets.
