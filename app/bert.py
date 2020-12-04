@@ -1,45 +1,105 @@
+import os.path
+import pickle
 import numpy as np
-import tensorflow as tf
-from transformers import *
+from tensorflow import keras
 from transformers import BertTokenizer, TFBertForSequenceClassification
 
 import utils
 
-def train(X, y):
-    bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-    bert_model = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
+model_save_path = 'app/saves/model/best_model.h5'
+emeddings_root_path = 'app/saves/embeddings/'
+inputs_path = emeddings_root_path + 'inputs.pickle'
+mask_path = emeddings_root_path + 'mask.pickle'
+label_path = emeddings_root_path + 'label.pickle'
+
+def save_embeddings(inputs, attention_masks, y):
+    print('Salvando os embeddings...')
+
+    pickle.dump((inputs), open(inputs_path, 'wb'))
+    pickle.dump((attention_masks), open(mask_path, 'wb'))
+    pickle.dump((y), open(label_path, 'wb'))
+
+    print('Embeddings salvos :)')
+
+def load_embeddings():
+    print('Carregando os embeddings salvos...')
+
+    inputs = pickle.load(open(inputs_path, 'rb'))
+    attention_masks = pickle.load(open(mask_path, 'rb'))
+    y = pickle.load(open(label_path, 'rb'))
+
+    print('Embeddings carregados :)')
+
+    return inputs, attention_masks, y
+
+def tokenize(X, y, split=True, save=True):
+    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
     inputs = []
     attention_masks = []
 
     for x in X:
-        tokenized = bert_tokenizer.encode_plus(
-            x,
-            add_special_tokens=True,
-            max_length=128,
-            padding='max_length',
-            return_attention_mask=True)
+        tokenized = tokenizer.encode_plus(
+                    x,
+                    add_special_tokens=True,
+                    max_length=128,
+                    padding='max_length',
+                    return_attention_mask=True)
 
         inputs.append(tokenized['input_ids'])
         attention_masks.append(tokenized['attention_mask'])
 
     inputs = np.asarray(inputs)
     attention_masks = np.array(attention_masks)
-    labels = np.array(y)
+    y = np.array(y)
 
-    train_inp,val_inp, _, train_label,val_label, _, train_mask,val_mask, _ = utils.split_data(inputs, labels, attention_masks)#train_test_split(inputs, labels, attention_masks, test_size=0.2)
+    if save:
+        save_embeddings(inputs, attention_masks, y)
 
-    loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
-    optimizer = tf.keras.optimizers.Adam(learning_rate=2e-5, epsilon=1e-08)
+    if split:
+        X_train, X_val, X_test, y_train, y_val, y_test, mask_train, mask_val, mask_test = utils.split_data(inputs, y, attention_masks)
+        return X_train, X_val, X_test, y_train, y_val, y_test, mask_train, mask_val, mask_test
+    else:
+        return inputs, attention_masks, y
 
-    bert_model.compile(loss=loss, optimizer=optimizer, metrics=[metric])
+def model_compile():
+    model = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
+    loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    metric = keras.metrics.SparseCategoricalAccuracy('accuracy')
+    optimizer = keras.optimizers.Adam(learning_rate=2e-5, epsilon=1e-08)
 
-    history = bert_model.fit(
-        [train_inp,train_mask],
-        train_label,
+    model.compile(loss=loss, optimizer=optimizer, metrics=[metric])
+
+    return model
+
+def train(X, y):
+    if os.path.isfile(inputs_path):
+        inputs, attention_masks, y = load_embeddings()
+        X_train, X_val, X_test, y_train, y_val, y_test, mask_train, mask_val, mask_test = utils.split_data(inputs, y, attention_masks)
+    else:
+        X_train, X_val, X_test, y_train, y_val, y_test, mask_train, mask_val, mask_test = tokenize(X, y)
+
+    model = model_compile()
+
+    callbacks = [keras.callbacks.ModelCheckpoint(
+                filepath=model_save_path,
+                save_weights_only=True,
+                monitor='val_loss',
+                mode='min',
+                save_best_only=True)]
+
+    history = model.fit(
+        [X_train, mask_train],
+        y_train,
         batch_size=16,
         epochs=4,
-        validation_data=([val_inp,val_mask],val_label))
+        validation_data=([X_val, mask_val], y_val),
+        callbacks=callbacks)
 
     return history
+
+def load_model():
+    model = model_compile()
+    model.load_weights(model_save_path)
+
+    return model

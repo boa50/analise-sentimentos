@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from wordcloud import WordCloud, STOPWORDS
 
 from sklearn.metrics import confusion_matrix, classification_report
+
+from classic_ml import tokenize
 
 def histogram(dados, title='', xlabel='', ylabel=''):
     plt.hist(dados)
@@ -32,7 +33,7 @@ def show_metrics(y, y_pred):
     plot_confusion_matrix(y, y_pred)
     print(classification_report(y, y_pred, target_names=get_labels()))
 
-def wordcloud(data, color = 'black'):
+def wordcloud(data, color='black', title=''):
     wordcloud = WordCloud(stopwords = STOPWORDS,
                           background_color = color,
                           width = 2500,
@@ -40,5 +41,18 @@ def wordcloud(data, color = 'black'):
                          ).generate(' '.join(data))
     plt.figure(figsize = (13, 13))
     plt.imshow(wordcloud)
+    plt.title(title)
     plt.axis('off')
     plt.show()
+
+def wordclouds(X):
+    positive = []
+    negative = []
+    for i, x in enumerate(X):
+        if i < len(X)/2:
+            negative.append(' '.join(tokenize(x)))
+        else:
+            positive.append(' '.join(tokenize(x)))
+
+    wordcloud(positive, title='Palavras de textos positivos')
+    wordcloud(negative, title='Palavras de textos negativos')
