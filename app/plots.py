@@ -21,6 +21,8 @@ def plot_confusion_matrix(y_test, y_pred):
     conf_matrix = confusion_matrix(y_test, y_pred)
     labels = get_labels()
 
+    print(conf_matrix)
+
     fig, ax = plt.subplots(figsize=(16, 9))
 
     sns.heatmap(conf_matrix, xticklabels=labels, yticklabels=labels, annot=True, fmt="d")

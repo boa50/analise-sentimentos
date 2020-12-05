@@ -1,3 +1,5 @@
+import os
+import pickle
 import re
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -9,6 +11,18 @@ from nltk.corpus import stopwords
 
 import utils
 
+def save_vectors(X, save_path):
+    print('Salvando o vetor...')
+    pickle.dump((X), open(save_path, 'wb'))
+    print('Vetor salvo :)')
+
+def load_vectors(load_path):
+    print('Carregando o vetor salvo...')
+    X = pickle.load(open(load_path, 'rb'))
+    print('Vetor carregado :)')
+
+    return X
+
 def words_remove(token):
     token = re.sub('https?://[^\s/$.?#]*.[^\s]*', '', token)
     token = re.sub('@(\w){1,15}', '', token)
@@ -17,12 +31,13 @@ def words_remove(token):
     return token
 
 def tokens_prepare(tokens):
-    STOPWORDS = stopwords.words('english')
+    # STOPWORDS = stopwords.words('english')
+    STOPWORDS = []
     lemmatizer = WordNetLemmatizer()
     tokens_prepared = []
 
-    for word, tag in pos_tag(tokens):
-        word = words_remove(word)
+    for token, tag in pos_tag(tokens):
+        token = words_remove(token)
 
         if tag.startswith('NN'):
             pos = 'n'
@@ -31,7 +46,7 @@ def tokens_prepare(tokens):
         else:
             pos = 'a'
 
-        token = lemmatizer.lemmatize(word, pos)
+        token = lemmatizer.lemmatize(token, pos)
         token = token.lower()
 
         if len(token) > 1 and token not in STOPWORDS:
@@ -46,21 +61,40 @@ def tokenize(text):
 
     return tokens
 
-def vecotrize_bow(X):
+def vecotrize_bow(X, save=True, save_path='bow.pickle'):
     vectorizer = CountVectorizer()
-    return vectorizer.fit_transform(X)
+    X = vectorizer.fit_transform(X)
 
-def vectorize_tfidf(X):
+    if save:
+        save_vectors(X, save_path)
+
+    return X
+
+def vectorize_tfidf(X, save=True, save_path='tfidf.pickle'):
     vectorizer = TfidfVectorizer(ngram_range=(1,2), max_features=10000, tokenizer=tokenize)
-    return vectorizer.fit_transform(X)
+    X = vectorizer.fit_transform(X)
+
+    if save:
+        save_vectors(X, save_path)
+
+    return X
 
 def prepare_data(dataset_path, vectorization='bow', verbose=False):
     X, y = utils.prepare_xy(dataset_path)
 
+    bow_path = 'app/saves/embeddings/bow.pickle'
+    tfidf_path = 'app/saves/embeddings/tfidf.pickle'
+
     if vectorization == 'bow':
-        X = vecotrize_bow(X)
+        if os.path.isfile(bow_path):
+            X = load_vectors(bow_path)
+        else:
+            X = vecotrize_bow(X, save_path=bow_path)
     elif vectorization == 'tfidf':
-        X = vectorize_tfidf(X)
+        if os.path.isfile(tfidf_path):
+            X = load_vectors(tfidf_path)
+        else:
+            X = vectorize_tfidf(X, save_path=tfidf_path)
     else:
         raise ValueError('Método não implementado!')
 

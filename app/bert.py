@@ -82,19 +82,27 @@ def train(X, y):
     model = model_compile()
 
     callbacks = [keras.callbacks.ModelCheckpoint(
-                filepath=model_save_path,
-                save_weights_only=True,
-                monitor='val_loss',
-                mode='min',
-                save_best_only=True)]
+                    filepath=model_save_path,
+                    save_weights_only=True,
+                    monitor='val_loss',
+                    mode='min',
+                    save_best_only=True,
+                    verbose=1),
+                keras.callbacks.EarlyStopping(
+                    monitor="val_loss",
+                    patience=10,
+                    verbose=0,
+                    mode="min")]
 
     history = model.fit(
         [X_train, mask_train],
         y_train,
         batch_size=16,
-        epochs=4,
+        epochs=100,
         validation_data=([X_val, mask_val], y_val),
         callbacks=callbacks)
+
+    pickle.dump((history.history), open('app/saves/model/history.pickle', 'wb'))
 
     return history
 
