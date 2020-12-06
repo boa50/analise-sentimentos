@@ -42,6 +42,7 @@ def tokenize(X, y, split=True, save=True):
         tokenized = tokenizer.encode_plus(
                     x,
                     add_special_tokens=True,
+                    truncation=True,
                     max_length=128,
                     padding='max_length',
                     return_attention_mask=True)
@@ -101,8 +102,6 @@ def train(X, y):
         epochs=100,
         validation_data=([X_val, mask_val], y_val),
         callbacks=callbacks)
-
-    pickle.dump((history.history), open('app/saves/model/history.pickle', 'wb'))
 
     return history
 

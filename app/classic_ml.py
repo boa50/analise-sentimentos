@@ -3,6 +3,8 @@ import pickle
 import re
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.naive_bayes import ComplementNB
+from sklearn.ensemble import RandomForestClassifier
 
 from nltk.tokenize import TweetTokenizer
 from nltk.tag import pos_tag
@@ -109,3 +111,24 @@ def prepare_data(dataset_path, vectorization='bow', verbose=False):
         print(X_test.shape)
 
     return X_train, X_val, X_test, y_train, y_val, y_test
+
+def train(classifier, X_train, y_train):
+    if classifier == 'complement_nb':
+        clf = ComplementNB()
+    elif classifier == 'random_forest':
+        clf = RandomForestClassifier(n_jobs=-1, random_state=50)
+    else:
+        raise ValueError('Método não implementado!')
+
+    clf.fit(X_train, y_train)
+
+    path = 'app/saves/clfs/' + classifier + '.pickle'
+    pickle.dump((clf), open(path, 'wb'))
+
+    return clf
+
+def load_classifier(classifier):
+    path = 'app/saves/clfs/' + classifier + '.pickle'
+    clf = pickle.load(open(path, 'rb'))
+
+    return clf
