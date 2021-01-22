@@ -128,7 +128,9 @@ def train(classifier, X_train, y_train):
     return clf
 
 def load_classifier(classifier):
+    print('Carregando o classificador...')
     path = 'app/saves/clfs/' + classifier + '.pickle'
     clf = pickle.load(open(path, 'rb'))
+    print('Classificador carregado :)')
 
     return clf

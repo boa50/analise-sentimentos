@@ -17,18 +17,23 @@ def histogram(dados, title='', xlabel='', ylabel=''):
 def get_labels():
     return['Negativa', 'Positiva']
 
-def plot_confusion_matrix(y_test, y_pred):
-    conf_matrix = confusion_matrix(y_test, y_pred)
+def plot_confusion_matrix(y_test, y_pred, conf_matrix=None):
+    if conf_matrix is None:
+        conf_matrix = confusion_matrix(y_test, y_pred)
+    
     labels = get_labels()
 
     print(conf_matrix)
 
     fig, ax = plt.subplots(figsize=(16, 9))
 
-    sns.heatmap(conf_matrix, xticklabels=labels, yticklabels=labels, annot=True, fmt="d")
-    ax.set_title("Matriz de Confusão", fontsize=20)
-    ax.set_ylabel('Classe Verdadeira', fontsize=15)
-    ax.set_xlabel('Classe Predita', fontsize=15)
+    sns.heatmap(conf_matrix, annot=True, fmt="d", annot_kws={"size":40})
+    ax.set_title("Matriz de Confusão", fontsize=22)
+    ax.set_ylabel('Classe Verdadeira', fontsize=20)
+    ax.set_xlabel('Classe Predita', fontsize=20)
+    ax.set_yticklabels(labels, fontsize=20)
+    ax.set_xticklabels(labels, fontsize=20)
+
     plt.show()
 
 def show_metrics(y, y_pred):
@@ -36,10 +41,11 @@ def show_metrics(y, y_pred):
     print(classification_report(y, y_pred, target_names=get_labels()))
 
 def wordcloud(data, color='black', title=''):
-    wordcloud = WordCloud(stopwords = STOPWORDS,
-                          background_color = color,
-                          width = 2500,
-                          height = 2000
+    wordcloud = WordCloud(stopwords=STOPWORDS,
+                          background_color=color,
+                          max_words=100,
+                          width=2500,
+                          height=2000
                          ).generate(' '.join(data))
     plt.figure(figsize = (13, 13))
     plt.imshow(wordcloud)
@@ -56,5 +62,5 @@ def wordclouds(X):
         else:
             positive.append(' '.join(tokenize(x)))
 
-    wordcloud(positive, title='Palavras de textos positivos')
-    wordcloud(negative, title='Palavras de textos negativos')
+    wordcloud(negative, title='Textos Negativos')
+    wordcloud(positive, title='Textos Positivos', color='white')

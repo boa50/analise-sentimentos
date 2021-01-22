@@ -4,18 +4,16 @@ import classic_ml
 import bert
 
 if __name__ == '__main__':
-    # utils.config_gpu()    
-    
-    # dataset_path = 'app/dataset/dataset.csv'
-    dataset_path = 'app/dataset/dataset-simple.csv'
+    dataset_path = 'app/dataset/dataset.csv'
+    # dataset_path = 'app/dataset/dataset-simple.csv'
 
     ### Wordcloud
-    # X, _ = utils.prepare_xy(dataset_path)
-    # plots.wordclouds(X)
+    X, _ = utils.prepare_xy(dataset_path)
+    plots.wordclouds(X)
 
 
     ### Classic ml
-    X_train, X_val, X_test, y_train, y_val, y_test = classic_ml.prepare_data(dataset_path, vectorization='bow')
+    # X_train, X_val, X_test, y_train, y_val, y_test = classic_ml.prepare_data(dataset_path, vectorization='bow')
 
     # clf = classic_ml.train('complement_nb', X_train, y_train)
     # clf = classic_ml.train('random_forest', X_train, y_train)
@@ -28,6 +26,7 @@ if __name__ == '__main__':
 
 
     ### BERT
+    # utils.config_gpu()
     # X, y = utils.prepare_xy(dataset_path)
     # history = bert.train(X, y)
 
@@ -39,3 +38,5 @@ if __name__ == '__main__':
     # y_pred = preds.logits.argmax(axis=1)
 
     # plots.show_metrics(y_test, y_pred)
+
+    # plots.plot_confusion_matrix([], [], [[70904, 9419], [8796, 70881]])
